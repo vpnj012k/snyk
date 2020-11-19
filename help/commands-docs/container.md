@@ -58,8 +58,8 @@ Find vulnerabilities in your container images.
   
 - `--username`=<CONTAINER_REGISTRY_USERNAME>:
   Specify a username to use when connecting to a container registry. This will be ignored in favour of local docker
-   binary credentials when using docker socket
+   binary credentials when using docker socket.
   
 - `--password`=<CONTAINER_REGISTRY_PASSWORD>:
   Specify a password to use when connecting to a container registry. This will be ignored in favour of local docker
-  binary credentials when using docker socket
+  binary credentials when using docker socket.
