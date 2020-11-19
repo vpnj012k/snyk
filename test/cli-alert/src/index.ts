@@ -41,24 +41,36 @@ async function run(octokit: Octokit) {
         // eslint-disable-next-line @typescript-eslint/camelcase
         workflow_id: smokeTestsID,
         // eslint-disable-next-line @typescript-eslint/camelcase
-        per_page: 3,
+        per_page: 6,
       })
     ).data;
     console.log('Got latest smoke tests...');
 
-    // ID of the most recent smoke test run
-    const runID = workflows.workflow_runs[0].id;
+    let runID = 0;
 
-    // Check if last 3 smoke tests failed
+    // Check status of the smoke tests
+    console.log('Checking status of smoke tests...');
     for (const workflow of workflows.workflow_runs) {
-      if (workflow.conclusion !== 'failure') {
-        console.log('Not all latest smoke tests failed. No need to alert.');
-        return;
+      if (workflow.status === 'completed') {
+        if (workflow.event === 'release' && workflow.conclusion !== 'success') {
+          console.log(
+            'A release-triggered smoke test failed! Try to re-run it...',
+          );
+          runID = workflow.id;
+          break;
+        } else if (workflow.conclusion === 'success') {
+          console.log(
+            'At least one of the last 6 smoke tests succeeded. No need to alert.',
+          );
+          return;
+        } else {
+          runID = runID === 0 ? workflow.id : runID; // runID will be the latest non-successful smoke test ID
+        }
       }
     }
 
-    // All 3 recent smoke tests failed - re-run!
-    console.log('All 3 latest smoke tests failed. Trying to re-run...');
+    // re-run last non-successful test!
+    console.log('Trying to re-run smoke test...');
     await octokit.actions.reRunWorkflow({
       owner: 'snyk',
       repo: 'snyk',
